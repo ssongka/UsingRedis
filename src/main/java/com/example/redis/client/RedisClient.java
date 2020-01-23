@@ -10,7 +10,7 @@ import redis.clients.jedis.JedisPool;
 @Slf4j
 @Component
 public class RedisClient {
-    final int RETRY_COUNT = 2;
+
     private final JedisPool jedisPool;
     private final ServerConfig serverConfig;
 
@@ -29,15 +29,13 @@ public class RedisClient {
     }
 
     public <T> T run(final RedisCallback<T> callback, final String key, final String tag) {
-        Jedis resource = null;
         boolean bOk = false;
         T result = null;
         String exceptionMsg = null;
+        int retryCount = getRedisRetryCount();
 
-        for (int i = 0; i < RETRY_COUNT && !bOk; i++) {
-            try {
-                resource = jedisPool.getResource();
-
+        for (int i = 0; i < retryCount && !bOk; i++) {
+            try(Jedis resource = jedisPool.getResource()) {
                 if(log.isDebugEnabled()) {
                     log.debug("[Redis] key={}, tag={}", key, tag);
                 }
@@ -48,10 +46,6 @@ public class RedisClient {
             catch (Exception e) {  //강제 retry시도
                 exceptionMsg = e.getMessage();
                 try { Thread.sleep(100); } catch (InterruptedException ignored) { }
-            } finally {
-                if( resource != null) {
-                    resource.close();
-                }
             }
         }
 
@@ -62,6 +56,10 @@ public class RedisClient {
         }
 
         return result;
+    }
+
+    private int getRedisRetryCount() {
+        return serverConfig.getInt("REDIS_RETRY_COUNT", 2);
     }
 }
 
