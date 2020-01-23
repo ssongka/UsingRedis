@@ -23,7 +23,7 @@ public class User extends RedisEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long userNo;
+    private Long userNo;
     
     private String name;
 

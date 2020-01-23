@@ -50,6 +50,7 @@ public abstract class HashOperationRedisRepository <H, K, V extends RedisHashEnt
                 }
             } catch (Exception e) {
                 Misc.stackTrace(e);
+                return null;
             }
 
             return rtnMap;
@@ -57,7 +58,7 @@ public abstract class HashOperationRedisRepository <H, K, V extends RedisHashEnt
 
 		//데이터가 존재 하지 않는다면 예외를 발생 시킨다
 		if( kvMap == null && !existsKey(h)) {
-			throw new RedisEntityNullException();
+			throw new RedisEntityNullException(String.format("Hash Entity not found.. key=%s", getKey(h)));
 		}
 
 		return kvMap;
@@ -78,10 +79,6 @@ public abstract class HashOperationRedisRepository <H, K, V extends RedisHashEnt
             }
         },  getKey(h), getEntry().getSimpleName() + "::HashGet");
 	}
-
-//	private boolean existsKey(final H h)  {
-//		return redisClient.run(jedis -> jedis.exists(getKey(h)), getKey(h), getEntry().getSimpleName() + "::Exists");
-//	}
 
 	public boolean setHash(final H h, final V hash) {
 		return redisClient.run(jedis -> {

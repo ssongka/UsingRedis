@@ -5,7 +5,6 @@ import com.example.redis.client.model.RedisEntity;
 import com.example.redis.client.serializer.RedisEntityMapper;
 import com.example.redis.util.Misc;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -28,8 +27,7 @@ public abstract class SetOperationRedisRepository<K, T extends RedisEntity> exte
             }
 
             try {
-                ObjectMapper mapper = RedisEntityMapper.getMapper();
-                return mapper.readValue(bytes, getEntry());
+                return RedisEntityMapper.getMapper().readValue(bytes, getEntry());
             } catch (IOException e) {
                 Misc.stackTrace(e);
                 log.error("[Redis][GET][{}] ReadValue fail.. usn={}", getEntry(), k);
@@ -39,7 +37,7 @@ public abstract class SetOperationRedisRepository<K, T extends RedisEntity> exte
 
         //데이터가 존재 하지 않는다면 예외를 발생 시킨다
         if( run == null && !existsKey(k)) {
-            throw new RedisEntityNullException();
+            throw new RedisEntityNullException("SetEntity Not Found.. key=" + getKey(k));
         }
 
         return run;
